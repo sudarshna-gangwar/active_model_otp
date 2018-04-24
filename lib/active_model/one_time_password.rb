@@ -73,8 +73,8 @@ module ActiveModel
         if result1 && result2
           self.otp_counter += 1
           save if respond_to?(:new_record) && !new_record?
-          result1 && result2
         end
+        result1 && result2
       end
 
       def otp_code(options = {})

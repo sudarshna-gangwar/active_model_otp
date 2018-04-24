@@ -58,37 +58,26 @@ module ActiveModel
       end
 
       def authenticate_otp_with_drift_and_counter(code, options = {})
-        # # counter based
-        # hotp = ROTP::HOTP.new(otp_column, digits: otp_digits)
-        # result1 = hotp.verify(code, otp_counter)
-
-        # # drift based
-        # totp = ROTP::TOTP.new(otp_column, digits: otp_digits)
-        # if drift = options[:drift]
-        #   result2 = totp.verify_with_drift(code, drift)
-        # else
-        #   result2 = totp.verify(code)
-        # end
-
-        # if result1 && result2
-        #   self.otp_counter += 1
-        #   save if respond_to?(:new_record) && !new_record?
-        # end
-        # result1 && result2
-
-        # drift based
         totp = ROTP::TOTP.new(otp_column, digits: otp_digits)
+        totp_valid = false
+        puts "#{totp_valid}   totp_valid  outside"
         if drift = options[:drift]
-          result2 = totp.verify_with_drift(code, drift)
+          totp_valid = totp.verify_with_drift(code, drift)
+          puts "#{totp_valid}   totp_valid   drift"
         else
-          result2 = totp.verify(code)
+          totp_valid = totp.verify(code)
+          puts "#{totp_valid}   totp_valid"
         end
+        return false unless totp_valid
 
-        if result2
+        hotp = ROTP::HOTP.new(otp_column, digits: otp_digits)
+        hotp_valid = hotp.verify(code, otp_counter)
+        puts "#{hotp_valid}   hotp_valid   outside"
+        if hotp_valid && options[:auto_increment]
           self.otp_counter += 1
           save if respond_to?(:new_record) && !new_record?
         end
-        result2
+        return hotp_valid
       end
 
       def otp_code(options = {})
